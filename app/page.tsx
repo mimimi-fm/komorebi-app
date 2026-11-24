@@ -242,7 +242,7 @@ export default function Home() {
       console.log("[v0] API status:", response.status);
       console.log("[v0] API response:", responseText);
 
-      let data: {
+      let recipeApiResponse: {
         recipes?: Array<
           Omit<Recipe, "id" | "image" | "meta"> & {
             cookingTimeMinutes: number;
@@ -252,21 +252,23 @@ export default function Home() {
         error?: string;
       } = {};
       try {
-        data = responseText ? JSON.parse(responseText) : {};
+        recipeApiResponse = responseText ? JSON.parse(responseText) : {};
       } catch {
         throw new Error("サーバーから正しい形式の応答を受け取れませんでした。");
       }
 
       if (
         !response.ok ||
-        !data.recipes ||
-        !Array.isArray(data.recipes) ||
-        data.recipes.length !== 3
+        !recipeApiResponse.recipes ||
+        !Array.isArray(recipeApiResponse.recipes) ||
+        recipeApiResponse.recipes.length !== 3
       ) {
-        throw new Error(data.error || "レシピの生成に失敗しました。");
+        throw new Error(
+          recipeApiResponse.error || "レシピの生成に失敗しました。",
+        );
       }
 
-      const aiRecipes: Recipe[] = data.recipes.map(
+      const aiRecipes: Recipe[] = recipeApiResponse.recipes.map(
         (
           recipe: Omit<Recipe, "id" | "meta" | "image" | "source"> & {
             cookingTimeMinutes: number;
@@ -765,7 +767,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
       <footer className="border-t border-[#e7e8e1] bg-[#fbfbf9] py-8 text-center text-xs text-[#9ba39a]">
         komorebi — 毎日の献立を、もっと軽やかに。
       </footer>
