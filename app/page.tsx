@@ -158,6 +158,8 @@ export default function Home() {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [selected, setSelected] = useState<Recipe | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [searched, setSearched] = useState(false);
   const router = useRouter();
   const [isSavingRecipe, setIsSavingRecipe] = useState(false);
@@ -216,6 +218,35 @@ export default function Home() {
 
     loadFavorites();
   }, [displayedRecipes]);
+
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(Boolean(session?.user));
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+    const { error } = await getSupabaseClient().auth.signOut({
+      scope: "local",
+    });
+    setIsLoggingOut(false);
+
+    if (error) {
+      alert("ログアウトに失敗しました。もう一度お試しください。");
+      return;
+    }
+
+    setMenuOpen(false);
+    router.replace("/");
+  };
 
   const handleSearch = async () => {
     const trimmedQuery = query.trim();
@@ -511,12 +542,23 @@ export default function Home() {
                 >
                   マイページ
                 </Link>
-                <Link
-                  href="/login"
-                  className="block w-full rounded-xl px-4 py-3 text-left hover:bg-[#f0f4ec]"
-                >
-                  ログイン
-                </Link>
+                {isLoggedIn ? (
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    disabled={isLoggingOut}
+                    className="block w-full rounded-xl px-4 py-3 text-left hover:bg-[#f0f4ec]"
+                  >
+                    {isLoggingOut ? "ログアウト中…" : "ログアウト"}
+                  </button>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="block w-full rounded-xl px-4 py-3 text-left hover:bg-[#f0f4ec]"
+                  >
+                    ログイン
+                  </Link>
+                )}
               </nav>
             )}
           </div>
